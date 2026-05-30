@@ -9,11 +9,13 @@ class Scheduler
 {
     private string $dataFile;
     private array $defaults;
+    private Logger $logger;
 
-    public function __construct(string $dataDir, array $defaults)
+    public function __construct(string $dataDir, array $defaults, Logger $logger)
     {
         $this->dataFile = $dataDir . '/schedule.json';
         $this->defaults = $defaults;
+        $this->logger = $logger;
         // 首次初始化
         if (!file_exists($this->dataFile)) {
             $this->save($defaults);
@@ -43,7 +45,7 @@ class Scheduler
 
     /**
      * 检查当前时间是否有待执行的任务
-     * 返回要执行的任务数组 [{time, template}]
+     * 返回 ['tasks' => [...], 'log' => [...]]
      */
     public function tick(): array
     {
@@ -51,12 +53,23 @@ class Scheduler
         $today  = date('Y-m-d');
         $tasks  = $this->getAll();
         $toRun  = [];
+        $log    = [];
+
+        $log[] = "[{$now}] 开始载入任务";
 
         foreach ($tasks as &$task) {
-            if ($task['time'] !== $now) continue;
+            $taskName = ($task['hour'] ?? $task['time']) . '点';
+            if ($task['time'] !== $now) {
+                $log[] = "[{$now}] 【{$taskName}】...条件检查 false";
+                continue;
+            }
             // 防重复：记录上次执行日期
-            if (($task['last_run'] ?? '') === $today) continue;
+            if (($task['last_run'] ?? '') === $today) {
+                $log[] = "[{$now}] 【{$taskName}】...条件检查 false (今日已执行)";
+                continue;
+            }
 
+            $log[] = "[{$now}] 【{$taskName}】...条件检查 true";
             $task['last_run'] = $today;
             $toRun[] = $task;
         }
@@ -65,6 +78,8 @@ class Scheduler
             $this->save($tasks);
         }
 
-        return $toRun;
+        $log[] = "[{$now}] 全部任务处理完成";
+
+        return ['tasks' => $toRun, 'log' => $log];
     }
 }

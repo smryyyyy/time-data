@@ -3,6 +3,7 @@ namespace App\Controllers;
 
 /**
  * 定时任务入口 — cron 每分钟调用 /cron/tick
+ * 容器内置了每分钟循环，无需外部 crontab
  */
 class CronController
 {
@@ -10,20 +11,21 @@ class CronController
     {
         $config    = $GLOBALS['hermes_config'];
         $logger    = $GLOBALS['hermes_logger'];
-        $scheduler = new \App\Scheduler($config['data_dir'], $config['schedule'] ?? []);
+        $scheduler = new \App\Scheduler($config['data_dir'], $config['schedule'] ?? [], $logger);
+        $now       = date('Y-m-d H:i:s');
 
-        // 每次触发时清理图床 7 天前图片
-        try {
-            $imgServer = new \App\Services\ImageServer($config['image_server']);
-            $imgServer->cleanup();
-        } catch (\Throwable $e) {
-            $logger->warn('图床清理失败: ' . $e->getMessage());
+        $result = $scheduler->tick();
+        $tasks  = $result['tasks'];
+        $log    = $result['log'];
+
+        // 日志文件 + 标准输出
+        foreach ($log as $line) {
+            $logger->info(preg_replace('/\[\d{2}:\d{2}\] /', '', $line));
+            echo $line . "\n";
         }
-
-        $tasks = $scheduler->tick();
+        flush();
 
         if (empty($tasks)) {
-            echo "OK — no tasks\n";
             return;
         }
 
@@ -31,14 +33,20 @@ class CronController
         $date   = date('Y-m-d');
 
         foreach ($tasks as $task) {
-            $hour = (int)($task['hour'] ?? $task['time'] ?? 0);
+            $hour = (int)($task['hour'] ?? explode(':', $task['time'] ?? '0')[0]);
             if (!isset($config['hours'][$hour]) || empty($config['hours'][$hour]['enabled'])) {
+                $logger->info("[{$hour}点] 跳过（时间点未启用）");
                 continue;
             }
 
             $logger->info("定时触发 [{$hour}点]");
-            $result = $runner->run($date, $hour);
-            echo "[{$hour}点] " . ($result['success'] ? 'OK' : 'FAIL: ' . $result['message']) . "\n";
+            echo "[{$now}] 【{$hour}点】执行开始...\n";
+
+            $runResult = $runner->run($date, $hour);
+            $msg = $runResult['success'] ? "完成 ✓" : "失败: " . $runResult['message'];
+            $logger->info("[{$hour}点] {$msg}");
+            echo "[{$now}] 【{$hour}点】{$msg}\n";
+            flush();
         }
     }
 }
