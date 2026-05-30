@@ -41,6 +41,7 @@ class Logger
         $time = date('H:i:s');
         $line = "[{$date} {$time}] [{$level}] {$msg}" . PHP_EOL;
         file_put_contents($this->dir . "/{$date}.log", $line, FILE_APPEND | LOCK_EX);
+        @chmod($this->dir . "/{$date}.log", 0666);
     }
 
     /**

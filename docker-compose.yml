@@ -1,6 +1,6 @@
 services:
   shibao:
-    image: time-data:v1
+    image: time-data:v2
     container_name: shibao
     ports:
       - "9080:80"
