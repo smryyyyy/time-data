@@ -50,5 +50,8 @@ RUN mkdir -p data logs tmp uploads templates/backup \
     && chown -R www-data:www-data data logs tmp uploads templates templates/backup \
     && echo '{}' > data/settings.json && chown www-data:www-data data/settings.json
 
+COPY start.sh /start.sh
+RUN chmod +x /start.sh
+
 EXPOSE 80
-CMD ["apache2-foreground"]
+CMD ["/start.sh"]
