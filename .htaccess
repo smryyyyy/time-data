@@ -1,0 +1,17 @@
+# Apache rewrite 规则
+# 如果使用 Apache，复制此文件到 server-v2/.htaccess
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteRule ^ index.php [QSA,L]
+</IfModule>
+
+# 禁止访问隐藏文件
+<FilesMatch "^\.">
+    Require all denied
+</FilesMatch>
+
+# PHP 执行保护：uploads/data/logs/tmp 目录下禁止执行 PHP
+# 各目录内有独立的 .htaccess（<FilesMatch> 在 .htaccess 中是合法的）
+# Nginx 部署无需此配置，nginx.conf 已处理

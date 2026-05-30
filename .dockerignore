@@ -1,0 +1,16 @@
+.git
+.gitignore
+.vscode
+.idea
+.DS_Store
+Thumbs.db
+Dockerfile
+docker-compose*.yml
+.dockerignore
+vendor
+logs/*.log
+tmp/*
+data/*.xlsx
+data/settings.json
+data/schedule.json
+templates/*.xlsx

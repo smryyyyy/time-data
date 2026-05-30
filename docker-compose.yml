@@ -1,0 +1,22 @@
+services:
+  shibao:
+    build: .
+    container_name: shibao
+    ports:
+      - "8080:80"
+    volumes:
+      - shibao_data:/var/www/html/data
+      - shibao_logs:/var/www/html/logs
+      - shibao_uploads:/var/www/html/uploads
+      - shibao_templates:/var/www/html/templates
+      - shibao_tmp:/var/www/html/tmp
+    environment:
+      - TZ=Asia/Shanghai
+    restart: unless-stopped
+
+volumes:
+  shibao_data:
+  shibao_logs:
+  shibao_uploads:
+  shibao_templates:
+  shibao_tmp:

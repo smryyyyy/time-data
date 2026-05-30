@@ -1,0 +1,9 @@
+vendor
+data/settings.json
+data/schedule.json
+data/*.xlsx
+logs
+tmp
+templates/*.xlsx
+templates/backup
+uploads

@@ -1,0 +1,7 @@
+{
+    "name": "shibao/server-v2",
+    "description": "时报推送系统 v2",
+    "require": {
+        "phpoffice/phpspreadsheet": "^2.0"
+    }
+}

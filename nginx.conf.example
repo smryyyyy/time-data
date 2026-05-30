@@ -1,0 +1,47 @@
+server {
+    listen 80;
+    server_name your-domain.com;  # ← 改成你的域名
+
+    root /var/www/shibao/server-v2;
+    index index.php;
+
+    # 日志
+    access_log /var/log/nginx/shibao_access.log;
+    error_log  /var/log/nginx/shibao_error.log;
+
+    # 限制上传文件大小（模板 + 图片）
+    client_max_body_size 20M;
+
+    # 安全：禁止访问隐藏文件
+    location ~ /\. {
+        deny all;
+    }
+
+    # 安全：禁止直接访问 uploads 内的 PHP
+    location ^~ /uploads/ {
+        location ~ \.php$ { deny all; }
+    }
+
+    # 安全：禁止访问 data/logs/tmp 内的 PHP
+    location ^~ /data/   { location ~ \.php$ { deny all; } }
+    location ^~ /logs/   { location ~ \.php$ { deny all; } }
+    location ^~ /tmp/    { location ~ \.php$ { deny all; } }
+
+    # 静态文件直接返回
+    location /assets/ {
+        expires 7d;
+        add_header Cache-Control "public, immutable";
+    }
+
+    # PHP 请求交给 PHP-FPM
+    location / {
+        try_files $uri $uri/ /index.php?$query_string;
+    }
+
+    location ~ \.php$ {
+        include fastcgi_params;
+        fastcgi_pass unix:/run/php/php8.1-fpm.sock;  # ← 根据你的 PHP 版本调整路径
+        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+        fastcgi_read_timeout 300;  # 下载/转换可能耗时较长
+    }
+}
