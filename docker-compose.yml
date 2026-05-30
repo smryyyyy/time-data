@@ -1,9 +1,9 @@
 services:
   shibao:
-    build: .
+    image: time-data:v1
     container_name: shibao
     ports:
-      - "8080:80"
+      - "9080:80"
     volumes:
       - shibao_data:/var/www/html/data
       - shibao_logs:/var/www/html/logs

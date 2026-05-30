@@ -203,7 +203,9 @@ def main():
                     print("错误：zip 解压后未找到 xlsx"); sys.exit(1)
                 full = found_xlsx
 
-            os.rename(full, output_path)
+            # 使用 shutil.move 支持跨设备移动（Docker volumes 不同挂载点）
+            import shutil
+            shutil.move(full, output_path)
             print(f"下载完成: {output_path}")
 
         except Exception as e:
