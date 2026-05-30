@@ -1,6 +1,10 @@
 # 时报推送系统
 
 <p align="center">
+  <img src="assets/logo.png" alt="时报推送系统" width="600">
+</p>
+
+<p align="center">
   <img src="https://img.shields.io/badge/PHP-8.2-777BB4?style=flat-square&logo=php&logoColor=white" alt="PHP">
   <img src="https://img.shields.io/badge/Apache-2.4-D22128?style=flat-square&logo=apache&logoColor=white" alt="Apache">
   <img src="https://img.shields.io/badge/Docker-2496ED?style=flat-square&logo=docker&logoColor=white" alt="Docker">
