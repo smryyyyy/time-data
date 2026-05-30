@@ -1,7 +1,7 @@
 # 时报推送系统
 
 <p align="center">
-  <img src="assets/logo.png" alt="时报推送系统" width="600">
+  <img src="/time-data.png" alt="时报推送系统" width="600">
 </p>
 
 <p align="center">
