@@ -47,6 +47,20 @@ class SettingsController
         // 时间点配置
         $hoursPost = json_decode($_POST['hours'] ?? '{}', true);
         if (is_array($hoursPost)) {
+            // 提取全局设置
+            if (isset($hoursPost['_global'])) {
+                $g = $hoursPost['_global'];
+                if (isset($g['alert_webhook'])) {
+                    $updates['alert_webhook'] = $g['alert_webhook'];
+                }
+                if (isset($g['pzoom_username'])) {
+                    $updates['pzoom']['username'] = $g['pzoom_username'];
+                }
+                if (isset($g['pzoom_password'])) {
+                    $updates['pzoom']['password'] = $g['pzoom_password'];
+                }
+                unset($hoursPost['_global']);
+            }
             foreach ($hoursPost as $h => $cfg) {
                 $h = (int)$h;
                 if ($h < 0 || $h > 23) continue;

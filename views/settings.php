@@ -167,6 +167,12 @@ document.getElementById('settingsForm').addEventListener('submit', function(e) {
     
     // Now parse all fields
     for (let [key, val] of fd.entries()) {
+        // 处理非 hours 的全局字段
+        if (key === 'alert_webhook' || key.startsWith('pzoom_')) {
+            if (!hoursData['_global']) hoursData['_global'] = {};
+            hoursData['_global'][key] = val;
+            continue;
+        }
         const m = key.match(/^hours\[(\d+)\]\[(\w+)\](?:\[([^\]]+)\])?(?:\[([^\]]+)\])?$/);
         if (!m) continue;
         const [, hour, field, sub, sub2] = m;
