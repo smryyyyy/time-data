@@ -69,10 +69,19 @@ class DashboardController
             if (!$proc) { echo "❌ 步骤 1/4 下载启动失败\n"; return; }
             while (!feof($proc)) {
                 $line = fgets($proc);
-                if ($line !== false) { echo $line; $log->info(trim($line)); flush(); }
+                if ($line !== false) {
+                    echo $line;
+                    $trimmed = trim($line);
+                    if (str_contains($trimmed, '错误') || str_contains($trimmed, '失败')) {
+                        $log->error($trimmed);
+                    } else {
+                        $log->info($trimmed);
+                    }
+                    flush();
+                }
             }
             $exitCode = pclose($proc);
-            if ($exitCode !== 0) { echo "❌ 步骤 1/4 下载失败 (exit={$exitCode})\n"; return; }
+            if ($exitCode !== 0) { echo "❌ 步骤 1/4 下载失败 (exit={$exitCode})\n"; $log->error("下载失败 (exit={$exitCode})"); return; }
             // Rename
             $downloaded = $config['data_dir'] . "/{$date}.xlsx";
             $dir = dirname($todayFile);
