@@ -85,15 +85,6 @@ return [
     // ========== 模板 ==========
     'template_max_size' => 10 * 1024 * 1024,   // 10MB
 
-    // ========== 在线图床 ==========
-    'image_server' => [
-        'api_url'    => 'http://shiba.img.guaibao.top/',
-        'username'   => '',
-        'password' => '\$2y\$10\$HufXw.G42L2MPMFVye6ONeCbDo9Yl3k3jaL3bvqs8d2pJISnbx1tW',
-        'url_prefix' => 'http://shiba.img.guaibao.top/uploads/',
-        'max_age'    => 7,   // 服务端自动清理
-    ],
-
     // ========== LibreOffice / ImageMagick ==========
     'libreoffice' => '/usr/bin/libreoffice',
     'imagemagick' => '/usr/bin/convert',
