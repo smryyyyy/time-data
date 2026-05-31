@@ -43,9 +43,8 @@ class App
         $r->get('/logs/view',             'Controllers\LogController',        'view',   true);
         $r->get('/settings',             'Controllers\SettingsController',   'index',  true);
         $r->post('/settings',            'Controllers\SettingsController',   'save',   true);
-        $r->get('/templates',            'Controllers\TemplateController',   'index',  true);
-        $r->post('/templates/upload',    'Controllers\TemplateController',   'upload', true);
-        $r->get('/images',               'Controllers\ImageController',      'page',   true);
+        $r->get('/templates',            'Controllers\\TemplateController',   'index',  true);
+        $r->post('/templates/upload',    'Controllers\\TemplateController',   'upload', true);
     }
 
     public function run(): void
