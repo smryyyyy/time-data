@@ -64,7 +64,9 @@ function enabledHours(array $hours): array
 /** 获取源数据文件路径 data/{date}/{prefix}({date}).xlsx */
 function sourceFilePath(string $dataDir, string $date, string $prefix): string
 {
-    return $dataDir . '/' . $date . '/' . $prefix . '(' . $date . ').xlsx';
+    // 提取纯数字前缀，避免中文导致 Docker overlay 编码问题
+    $numPrefix = preg_replace('/[^0-9]/', '', $prefix);
+    return $dataDir . '/' . $date . '/' . $numPrefix . '_' . $date . '.xlsx';
 }
 
 /** 获取模板文件路径 */
