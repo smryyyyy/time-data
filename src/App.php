@@ -11,12 +11,7 @@ class App
     {
         $this->config = $config;
         date_default_timezone_set($config['timezone'] ?? 'Asia/Shanghai');
-        $this->logger = new Logger($config['log_dir']);
-        // 告警推送：ERROR/WARN 自动发到飞书
-        $alertWebhook = $config['alert_webhook'] ?? '';
-        if ($alertWebhook) {
-            $this->logger->setAlert($alertWebhook);
-        }
+        $this->logger = new Logger($config['log_dir'], $config['alert_webhook'] ?? '');
         $this->router = new Router();
         $this->registerRoutes();
         $GLOBALS['hermes_config'] = $config;

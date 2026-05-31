@@ -10,21 +10,17 @@ class Logger
 {
     private string $dir;
     private ?string $alertWebhook = null;
-    private ?Services\Feishu $feishu = null;
 
-    public function __construct(string $dir)
+    public function __construct(string $dir, ?string $alertWebhook = null)
     {
         $this->dir = $dir;
+        $this->alertWebhook = $alertWebhook;
         if (!is_dir($dir)) mkdir($dir, 0755, true);
     }
 
-    /**
-     * 设置告警推送（在 App 初始化后调用）
-     */
-    public function setAlert(?string $webhook, ?Services\Feishu $feishu = null): void
+    public function setAlert(?string $webhook): void
     {
         $this->alertWebhook = $webhook;
-        $this->feishu = $feishu;
     }
 
     public function info(string $msg): void
