@@ -52,7 +52,7 @@ class Merge
         $this->logger->info("重算公式并渲染图表 (LibreOffice UNO)...");
         $tmpRecalc = $mergedFile . '.recalc.tmp';
         $pyScript = __DIR__ . '/../../scripts/recalc_xlsx.py';
-        $renderDir = dirname($mergedFile);  // render PNGs alongside merged file
+        $renderDir = dirname($mergedFile);
         $cmd = sprintf('python3 %s %s %s %s 2>&1',
             escapeshellarg($pyScript),
             escapeshellarg($mergedFile),
@@ -64,7 +64,6 @@ class Merge
             $this->logger->error("UNO 重算失败: " . implode("\n", $output));
             throw new \RuntimeException("公式重算失败 (exit={$exitCode})");
         }
-        // 用重算后的文件替换原文件
         if (!rename($tmpRecalc, $mergedFile)) {
             throw new \RuntimeException("替换重算文件失败");
         }
@@ -89,7 +88,7 @@ class Merge
         if (!$proc) {
             throw new \RuntimeException("无法启动 Python 进程");
         }
-        fclose($pipes[0]); // close stdin
+        fclose($pipes[0]);
 
         $stdout = stream_get_contents($pipes[1]);
         fclose($pipes[1]);
@@ -102,7 +101,6 @@ class Merge
             throw new \RuntimeException("读取源数据失败: " . $stderr);
         }
 
-        // Remove warning line (starts with "UserWarning" or empty) from stdout
         $lines = explode("\n", $stdout);
         $json = '';
         foreach ($lines as $l) {
@@ -136,15 +134,22 @@ class Merge
         $sheetXml = $zip->getFromName($sheetPath);
         if (!$sheetXml) throw new \RuntimeException("Sheet XML not found");
 
-        // ⚠️ 从原 sheetData 中提取非 copy_range 列的单元格（保留 L 列等中转公式）
-        $colSet = array_flip($cols); // ['A'=>0, 'B'=>0, ... 'K'=>0] 快速查找
+        // 从原 sheetData 中提取保留内容
+        $colSet = array_flip($cols);
         $preservedCells = []; // rowNum => [cellXml, ...]
+        $extraRows = [];      // rows beyond data range to keep
         preg_match('/<sheetData>(.*?)<\/sheetData>/s', $sheetXml, $sdMatch);
         if (!empty($sdMatch[1])) {
             preg_match_all('/<row r="(\d+)"[^>]*>(.*?)<\/row>/s', $sdMatch[1], $rowMatches, PREG_SET_ORDER);
             foreach ($rowMatches as $rm) {
                 $rowNum = (int)$rm[1];
                 $rowContent = $rm[2];
+                // Rows beyond data range: preserve entire row
+                if ($rowNum > count($data)) {
+                    $extraRows[] = $rm[0];
+                    continue;
+                }
+                // Rows within data range: preserve non-copy_range cells (e.g., L column formulas)
                 $nonColCells = [];
                 preg_match_all('/<c r="([A-Z]+)\d+"[^>]*>.*?<\/c>/s', $rowContent, $cellMatches, PREG_SET_ORDER);
                 foreach ($cellMatches as $cm) {
@@ -159,9 +164,10 @@ class Merge
             }
         }
 
-        // 生成新行：数据列 + 保留的非 copy_range 列（含公式）
+        // 生成新行：数据列 + 保留的非 copy_range 列
         $rows = [];
-        for ($i = 0; $i < count($data); $i++) {
+        $dataCount = count($data);
+        for ($i = 0; $i < $dataCount; $i++) {
             $rowNum = $i + 1;
             $cells = [];
             foreach ($cols as $col) {
@@ -181,6 +187,11 @@ class Merge
             $rows[] = '<row r="' . $rowNum . '">' . implode('', $cells) . '</row>';
             unset($cells);
         }
+
+        // 追加超出数据行数的模板原有行（如 L17~L26 的中转公式）
+        $rows = array_merge($rows, $extraRows);
+        unset($extraRows);
+
         $newRows = '<sheetData>' . implode('', $rows) . '</sheetData>';
         unset($rows);
 
