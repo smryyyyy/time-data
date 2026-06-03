@@ -1,5 +1,6 @@
 services:
   shibao:
+    build: .
     image: time-data:v2
     container_name: shibao
     ports:

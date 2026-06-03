@@ -125,3 +125,22 @@ function scanExportSheets(string $xlsxFile): array
     }
     return $exports;
 }
+
+/** 递归计算目录大小 */
+function dirSize(string $dir): int
+{
+    $size = 0;
+    foreach (new RecursiveIteratorIterator(new RecursiveDirectoryIterator($dir, RecursiveDirectoryIterator::SKIP_DOTS)) as $f) {
+        $size += $f->getSize();
+    }
+    return $size;
+}
+
+/** 递归删除目录 */
+function removeDir(string $dir): void
+{
+    foreach (new RecursiveIteratorIterator(new RecursiveDirectoryIterator($dir, RecursiveDirectoryIterator::SKIP_DOTS), RecursiveIteratorIterator::CHILD_FIRST) as $f) {
+        $f->isDir() ? rmdir($f->getPathname()) : unlink($f->getPathname());
+    }
+    rmdir($dir);
+}
