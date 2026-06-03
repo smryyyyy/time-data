@@ -151,11 +151,25 @@ class Merge
                 }
                 // Rows within data range: preserve non-copy_range cells (e.g., L column formulas)
                 $nonColCells = [];
-                preg_match_all('/<c r="([A-Z]+)\d+"[^>/]*(?:\/>|>(?:.*?<\/c>)?)/s', $rowContent, $cellMatches, PREG_SET_ORDER);
-                foreach ($cellMatches as $cm) {
+                // Split by <c r=" to reliably handle self-closing tags
+                $parts = explode('<c r="', $rowContent);
+                array_shift($parts);
+                foreach ($parts as $part) {
+                    if (!preg_match('/^([A-Z]+)\d+"/', $part, $cm)) continue;
                     $cellCol = $cm[1];
-                    if (!isset($colSet[$cellCol])) {
-                        $nonColCells[] = $cm[0];
+                    if (isset($colSet[$cellCol])) continue;
+                    // Find cell boundary
+                    $firstGt = strpos($part, '>');
+                    if ($firstGt === false) continue;
+                    if ($part[$firstGt - 1] === '/') {
+                        // Self-closing: cell ends at />
+                        $nonColCells[] = '<c r="' . substr($part, 0, $firstGt + 1);
+                    } else {
+                        // Full cell: ends at </c>
+                        $closePos = strpos($part, '</c>');
+                        if ($closePos !== false) {
+                            $nonColCells[] = '<c r="' . substr($part, 0, $closePos + 4);
+                        }
                     }
                 }
                 if (!empty($nonColCells)) {
