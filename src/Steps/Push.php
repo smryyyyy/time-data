@@ -23,13 +23,22 @@ class Push
         // 1. 上传图片到飞书 → image_key（直接 curl，绕过 Feishu 类）
         $this->logger->info("上传图片到飞书...");
         $imageKeys = [];
+        $uploadFailures = 0;
         foreach ($pngFiles as $name => $path) {
             try {
                 $imageKeys[$name] = $this->curlUploadImage($path, $feishuCfg);
                 $this->logger->info("  {$name} → image_key OK");
             } catch (\Throwable $e) {
+                $uploadFailures++;
                 $this->logger->error("上传失败 {$name}: " . $e->getMessage());
             }
+        }
+
+        // 如果有上传失败，抛异常触发告警（但已成功的图片继续推送）
+        if ($uploadFailures > 0) {
+            $msg = "上传失败 {$uploadFailures}/" . count($pngFiles) . " 张图片";
+            $this->logger->error($msg);
+            throw new \RuntimeException($msg);
         }
 
         // 2. 读文字
