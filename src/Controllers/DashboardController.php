@@ -208,4 +208,49 @@ class DashboardController
 
         echo "━━━━━━━━━━━━━━━━━━━━━━━\n🎉 [{$hour}点] {$date} 全部完成\n";
     }
+
+    /**
+     * 手动清理 4 天前的历史数据
+     */
+    public function cleanup(): void
+    {
+        $config = $GLOBALS['hermes_config'];
+        $logger = $GLOBALS['hermes_logger'];
+        $cutoff = strtotime('-4 days');
+        $cutoffDate = date('Y-m-d', $cutoff);
+        $totalSize = 0;
+        $totalFiles = 0;
+        $details = [];
+
+        foreach ([$config['data_dir'], $config['output_dir']] as $dir) {
+            foreach (glob($dir . '/20*', GLOB_ONLYDIR) as $sub) {
+                $dirDate = basename($sub);
+                if ($dirDate >= $cutoffDate) continue;
+                $size = dirSize($sub);
+                removeDir($sub);
+                $totalSize += $size;
+                $totalFiles++;
+                $details[] = basename($dir) . '/' . $dirDate . ' (' . formatSize($size) . ')';
+            }
+        }
+        foreach (glob($config['log_dir'] . '/20*.log') as $file) {
+            $fileDate = basename($file, '.log');
+            if ($fileDate >= $cutoffDate) continue;
+            $size = filesize($file);
+            unlink($file);
+            $totalSize += $size;
+            $totalFiles++;
+            $details[] = 'logs/' . basename($file) . ' (' . formatSize($size) . ')';
+        }
+
+        $logger->info("手动清理: {$totalFiles}个, 释放 " . formatSize($totalSize));
+
+        header('Content-Type: application/json');
+        echo json_encode([
+            'success' => true,
+            'message' => "清理完成: {$totalFiles} 个文件/目录, 释放 " . formatSize($totalSize),
+            'details' => $details,
+            'total_freed' => $totalSize,
+        ], JSON_UNESCAPED_UNICODE);
+    }
 }

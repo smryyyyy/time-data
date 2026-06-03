@@ -10,6 +10,7 @@
         <span style="margin-right:16px"><?= h($label) ?>: <?= formatSize($s['size']) ?> (<?= $s['files'] ?> 个)</span>
     <?php endforeach; ?>
     </span>
+    <button onclick="cleanupData()" class="btn btn-sm" style="float:right">清理4天前</button>
 </div>
 
 <div class="filter-bar" style="margin-bottom:16px">
@@ -86,6 +87,18 @@ async function doRun() {
         }
     } catch(e) {
         out.innerText = '错误: ' + e;
+    }
+}
+
+async function cleanupData() {
+    if (!confirm('确定清理4天前的历史数据？')) return;
+    try {
+        const r = await fetch('/cleanup', { method: 'POST' });
+        const result = await r.json();
+        alert(result.message);
+        if (result.success) location.reload();
+    } catch(e) {
+        alert('清理失败: ' + e);
     }
 }
 </script>
