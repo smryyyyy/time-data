@@ -133,7 +133,33 @@ class Merge
 
         $sheetPath = 'xl/' . $rm[1];
 
-        // 生成新行（用数组避免字符串拼接碎片）
+        $sheetXml = $zip->getFromName($sheetPath);
+        if (!$sheetXml) throw new \RuntimeException("Sheet XML not found");
+
+        // ⚠️ 从原 sheetData 中提取非 copy_range 列的单元格（保留 L 列等中转公式）
+        $colSet = array_flip($cols); // ['A'=>0, 'B'=>0, ... 'K'=>0] 快速查找
+        $preservedCells = []; // rowNum => [cellXml, ...]
+        preg_match('/<sheetData>(.*?)<\/sheetData>/s', $sheetXml, $sdMatch);
+        if (!empty($sdMatch[1])) {
+            preg_match_all('/<row r="(\d+)"[^>]*>(.*?)<\/row>/s', $sdMatch[1], $rowMatches, PREG_SET_ORDER);
+            foreach ($rowMatches as $rm) {
+                $rowNum = (int)$rm[1];
+                $rowContent = $rm[2];
+                $nonColCells = [];
+                preg_match_all('/<c r="([A-Z]+)\d+"[^>]*>.*?<\/c>/s', $rowContent, $cellMatches, PREG_SET_ORDER);
+                foreach ($cellMatches as $cm) {
+                    $cellCol = $cm[1];
+                    if (!isset($colSet[$cellCol])) {
+                        $nonColCells[] = $cm[0];
+                    }
+                }
+                if (!empty($nonColCells)) {
+                    $preservedCells[$rowNum] = $nonColCells;
+                }
+            }
+        }
+
+        // 生成新行：数据列 + 保留的非 copy_range 列（含公式）
         $rows = [];
         for ($i = 0; $i < count($data); $i++) {
             $rowNum = $i + 1;
@@ -148,14 +174,16 @@ class Merge
                     $cells[] = '<c r="' . $cellRef . '" t="inlineStr"><is><t>' . htmlspecialchars((string)$val, ENT_XML1) . '</t></is></c>';
                 }
             }
+            // 追加保留的非 copy_range 列（如 L 列公式 =I{row}/K{row}）
+            if (isset($preservedCells[$rowNum])) {
+                $cells = array_merge($cells, $preservedCells[$rowNum]);
+            }
             $rows[] = '<row r="' . $rowNum . '">' . implode('', $cells) . '</row>';
             unset($cells);
         }
         $newRows = '<sheetData>' . implode('', $rows) . '</sheetData>';
         unset($rows);
 
-        $sheetXml = $zip->getFromName($sheetPath);
-        if (!$sheetXml) throw new \RuntimeException("Sheet XML not found");
         $sheetXml = preg_replace('/<sheetData>.*?<\/sheetData>/s', $newRows, $sheetXml);
         $zip->addFromString($sheetPath, $sheetXml);
         unset($sheetXml, $newRows);
