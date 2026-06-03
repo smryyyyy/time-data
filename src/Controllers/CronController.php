@@ -61,7 +61,7 @@ class CronController
      */
     private function cleanup(array $config, \App\Logger $logger): void
     {
-        $keepDays = 7;
+        $keepDays = 4;
         $cutoff = strtotime("-{$keepDays} days");
         if (!$cutoff) return;
         $cutoffDate = date('Y-m-d', $cutoff);
