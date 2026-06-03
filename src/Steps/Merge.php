@@ -151,7 +151,7 @@ class Merge
                 }
                 // Rows within data range: preserve non-copy_range cells (e.g., L column formulas)
                 $nonColCells = [];
-                preg_match_all('/<c r="([A-Z]+)\d+"[^>]*(?:\/>|>(?:.*?<\/c>)?)/s', $rowContent, $cellMatches, PREG_SET_ORDER);
+                preg_match_all('/<c r="([A-Z]+)\d+"[^>/]*(?:\/>|>(?:.*?<\/c>)?)/s', $rowContent, $cellMatches, PREG_SET_ORDER);
                 foreach ($cellMatches as $cm) {
                     $cellCol = $cm[1];
                     if (!isset($colSet[$cellCol])) {
