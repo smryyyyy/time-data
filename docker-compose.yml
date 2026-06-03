@@ -12,6 +12,8 @@ services:
       - shibao_tmp:/var/www/html/tmp
     environment:
       - TZ=Asia/Shanghai
+      - FEISHU_APP_ID=your_feishu_app_id
+      - FEISHU_APP_SECRET=your_feishu_app_secret
     restart: unless-stopped
 
 volumes:

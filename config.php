@@ -30,8 +30,8 @@ return [
 
     // ========== 飞书 ==========
     'feishu' => [
-        'app_id'     => 'your_feishu_app_id',
-        'app_secret' => 'your_feishu_app_secret',
+        'app_id'     => getenv('FEISHU_APP_ID') ?: 'your_feishu_app_id',
+        'app_secret' => getenv('FEISHU_APP_SECRET') ?: 'your_feishu_app_secret',
     ],
 
     // ========== 全局告警 webhook ==========
