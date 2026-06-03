@@ -12,6 +12,7 @@ class SettingsController
         $hours  = $config['hours'];
         $pzoom  = $config['pzoom'];
         $alert  = $config['alert_webhook'] ?? '';
+        $feishu = $config['feishu'] ?? [];
         $tplDir = $config['template_dir'];
 
         // 预扫描每个已启用时间点的模板导出 sheet
@@ -24,7 +25,7 @@ class SettingsController
             }
         }
 
-        render('settings', compact('hours', 'pzoom', 'alert', 'hourSheets'));
+        render('settings', compact('hours', 'pzoom', 'alert', 'feishu', 'hourSheets'));
     }
 
     public function save(): void
@@ -43,6 +44,12 @@ class SettingsController
         if (isset($_POST['alert_webhook'])) {
             $updates['alert_webhook'] = $_POST['alert_webhook'];
         }
+        if (!empty($_POST['feishu_app_id'])) {
+            $updates['feishu']['app_id'] = $_POST['feishu_app_id'];
+        }
+        if (!empty($_POST['feishu_app_secret'])) {
+            $updates['feishu']['app_secret'] = $_POST['feishu_app_secret'];
+        }
 
         // 时间点配置
         $hoursPost = json_decode($_POST['hours'] ?? '{}', true);
@@ -58,6 +65,12 @@ class SettingsController
                 }
                 if (isset($g['pzoom_password'])) {
                     $updates['pzoom']['password'] = $g['pzoom_password'];
+                }
+                if (isset($g['feishu_app_id'])) {
+                    $updates['feishu']['app_id'] = $g['feishu_app_id'];
+                }
+                if (isset($g['feishu_app_secret'])) {
+                    $updates['feishu']['app_secret'] = $g['feishu_app_secret'];
                 }
                 unset($hoursPost['_global']);
             }

@@ -20,6 +20,12 @@ class Router
         $this->addRoute('DELETE', $uri, $controller, $method, $auth);
     }
 
+    public function any(string $uri, string $controller, string $method, bool $auth = false): void
+    {
+        $this->addRoute('GET', $uri, $controller, $method, $auth);
+        $this->addRoute('POST', $uri, $controller, $method, $auth);
+    }
+
     private function addRoute(string $verb, string $uri, string $controller, string $method, bool $auth): void
     {
         $this->routes[] = compact('verb', 'uri', 'controller', 'method', 'auth');

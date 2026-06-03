@@ -18,6 +18,12 @@
         <label>告警 Webhook：
             <input type="text" name="alert_webhook" value="<?= h($alert) ?>" placeholder="失败时推送到此飞书机器人">
         </label>
+        <label>飞书 App ID：
+            <input type="text" name="feishu_app_id" value="<?= h($feishu['app_id'] ?? '') ?>" placeholder="cli_xxxxxxxxxxxxxxxxxx">
+        </label>
+        <label>飞书 App Secret：
+            <input type="password" name="feishu_app_secret" value="<?= h($feishu['app_secret'] ?? '') ?>" placeholder="应用密钥">
+        </label>
     </div>
 </div>
 </div>
@@ -168,7 +174,7 @@ document.getElementById('settingsForm').addEventListener('submit', function(e) {
     // Now parse all fields
     for (let [key, val] of fd.entries()) {
         // 处理非 hours 的全局字段
-        if (key === 'alert_webhook' || key.startsWith('pzoom_')) {
+        if (key === 'alert_webhook' || key.startsWith('pzoom_') || key.startsWith('feishu_')) {
             if (!hoursData['_global']) hoursData['_global'] = {};
             hoursData['_global'][key] = val;
             continue;

@@ -216,8 +216,10 @@ class DashboardController
     {
         $config = $GLOBALS['hermes_config'];
         $logger = $GLOBALS['hermes_logger'];
-        $cutoff = strtotime('-4 days');
-        $cutoffDate = date('Y-m-d', $cutoff);
+        $days = (int)($_POST['days'] ?? 4);
+        $cutoff = $days > 0 ? strtotime("-{$days} days") : null;
+        $label = $days > 0 ? "{$days}天前" : '全部';
+        $cutoffDate = $days > 0 ? date('Y-m-d', $cutoff) : '';
         $totalSize = 0;
         $totalFiles = 0;
         $details = [];
@@ -225,7 +227,7 @@ class DashboardController
         foreach ([$config['data_dir'], $config['output_dir']] as $dir) {
             foreach (glob($dir . '/20*', GLOB_ONLYDIR) as $sub) {
                 $dirDate = basename($sub);
-                if ($dirDate >= $cutoffDate) continue;
+                if ($cutoffDate && $dirDate >= $cutoffDate) continue;
                 $size = dirSize($sub);
                 removeDir($sub);
                 $totalSize += $size;
@@ -235,7 +237,7 @@ class DashboardController
         }
         foreach (glob($config['log_dir'] . '/20*.log') as $file) {
             $fileDate = basename($file, '.log');
-            if ($fileDate >= $cutoffDate) continue;
+            if ($cutoffDate && $fileDate >= $cutoffDate) continue;
             $size = filesize($file);
             unlink($file);
             $totalSize += $size;
@@ -243,12 +245,12 @@ class DashboardController
             $details[] = 'logs/' . basename($file) . ' (' . formatSize($size) . ')';
         }
 
-        $logger->info("手动清理: {$totalFiles}个, 释放 " . formatSize($totalSize));
+        $logger->info("手动清理({$label}): {$totalFiles}个, 释放 " . formatSize($totalSize));
 
         header('Content-Type: application/json');
         echo json_encode([
             'success' => true,
-            'message' => "清理完成: {$totalFiles} 个文件/目录, 释放 " . formatSize($totalSize),
+            'message' => "清理完成({$label}): {$totalFiles} 个文件/目录, 释放 " . formatSize($totalSize),
             'details' => $details,
             'total_freed' => $totalSize,
         ], JSON_UNESCAPED_UNICODE);

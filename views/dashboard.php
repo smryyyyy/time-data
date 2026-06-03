@@ -10,7 +10,11 @@
         <span style="margin-right:16px"><?= h($label) ?>: <?= formatSize($s['size']) ?> (<?= $s['files'] ?> 个)</span>
     <?php endforeach; ?>
     </span>
-    <button onclick="cleanupData()" class="btn btn-sm" style="float:right">清理4天前</button>
+    <div style="float:right;display:flex;gap:6px">
+        <button onclick="updateCode()" class="btn btn-sm" style="background:#e8f0fe;border-color:#1a73e8">在线更新</button>
+        <button onclick="cleanupData(4)" class="btn btn-sm">清理4天前</button>
+        <button onclick="cleanupData(0)" class="btn btn-sm" style="background:#fee2e2;border-color:#fecaca">全部清理</button>
+    </div>
 </div>
 
 <div class="filter-bar" style="margin-bottom:16px">
@@ -90,15 +94,35 @@ async function doRun() {
     }
 }
 
-async function cleanupData() {
-    if (!confirm('确定清理4天前的历史数据？')) return;
+async function cleanupData(days) {
+    const label = days > 0 ? days + '天前' : '全部';
+    if (!confirm('确定清理' + label + '的历史数据？此操作不可恢复！')) return;
     try {
-        const r = await fetch('/cleanup', { method: 'POST' });
+        const fd = new FormData();
+        fd.set('days', days);
+        const r = await fetch('/cleanup', { method: 'POST', body: fd });
         const result = await r.json();
         alert(result.message);
         if (result.success) location.reload();
     } catch(e) {
         alert('清理失败: ' + e);
+    }
+}
+
+async function updateCode() {
+    if (!confirm('确定从 GitHub 拉取最新代码？容器将短暂重启。')) return;
+    const btn = event.target;
+    btn.disabled = true;
+    btn.textContent = '更新中...';
+    try {
+        const r = await fetch('/update', { method: 'POST' });
+        const result = await r.json();
+        alert(result.message);
+        if (result.success) location.reload();
+    } catch(e) {
+        alert('更新失败: ' + e);
+        btn.disabled = false;
+        btn.textContent = '在线更新';
     }
 }
 </script>

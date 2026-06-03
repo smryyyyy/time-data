@@ -35,6 +35,7 @@ class App
         $r->get('/',                      'Controllers\DashboardController',  'index',  true);
         $r->post('/run',                  'Controllers\DashboardController',  'run',    true);
         $r->post('/cleanup',              'Controllers\DashboardController',  'cleanup', true);
+        $r->any('/update',                'Controllers\UpdateController',     'index',  true);
         $r->get('/logs',                  'Controllers\LogController',        'index',  true);
         $r->get('/logs/view',             'Controllers\LogController',        'view',   true);
         $r->get('/settings',             'Controllers\SettingsController',   'index',  true);
