@@ -22,7 +22,39 @@ class DashboardController
                 $statuses[$h] = trim(file_get_contents($runLog));
             }
         }
-        render('dashboard', compact('hours', 'today', 'logText', 'statuses'));
+
+        // 历史数据存储容量
+        $storage = [];
+        $dirs = [
+            '数据源' => $config['data_dir'],
+            '临时文件' => $config['output_dir'] ?? ROOT . '/tmp',
+            '日志'  => $config['log_dir'],
+        ];
+        foreach ($dirs as $label => $dir) {
+            if (!is_dir($dir)) continue;
+            $size = 0;
+            $files = 0;
+            foreach (glob($dir . '/20*', GLOB_ONLYDIR) as $sub) {
+                $size += dirSize($sub);
+                $files++;
+            }
+            // 日志目录是 .log 文件，不是子目录
+            if ($label === '日志') {
+                $size = 0;
+                $files = 0;
+                foreach (glob($dir . '/20*.log') as $f) {
+                    $size += filesize($f);
+                    $files++;
+                }
+            }
+            $storage[$label] = ['size' => $size, 'files' => $files];
+        }
+        $storage['总计'] = [
+            'size' => array_sum(array_column($storage, 'size')),
+            'files' => array_sum(array_column($storage, 'files')),
+        ];
+
+        render('dashboard', compact('hours', 'today', 'logText', 'statuses', 'storage'));
     }
 
     public function run(): void

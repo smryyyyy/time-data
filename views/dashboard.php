@@ -2,6 +2,16 @@
 <h1>仪表盘</h1>
 <p style="color:#888">今天：<?= h($today) ?></p>
 
+<!-- 存储容量 -->
+<div class="storage-bar" style="margin-bottom:16px;padding:12px;background:#f8f9fa;border-radius:6px;font-size:13px">
+    <strong>历史数据存储</strong>
+    <span style="margin-left:12px;color:#555">
+    <?php foreach ($storage as $label => $s): ?>
+        <span style="margin-right:16px"><?= h($label) ?>: <?= formatSize($s['size']) ?> (<?= $s['files'] ?> 个)</span>
+    <?php endforeach; ?>
+    </span>
+</div>
+
 <div class="filter-bar" style="margin-bottom:16px">
     <a href="?filter=on" class="btn btn-sm <?= ($_GET['filter'] ?? 'all') === 'on' ? 'btn-primary' : '' ?>">已开启</a>
 </div>
