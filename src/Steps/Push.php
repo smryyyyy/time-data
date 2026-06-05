@@ -43,7 +43,7 @@ class Push
 
         // 2. 读文字
         require_once ROOT . '/src/xlsx_reader.php';
-        $texts = readExportSheetText($mergedFile);
+        $texts = readExportSheetText($mergedFile, $hourCfg);
 
         // 3. 推送
         foreach ($exports as $sheetName => $cfg) {

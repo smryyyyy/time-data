@@ -1,24 +1,25 @@
 <?php $view = 'dashboard'; ?>
 <h1>仪表盘</h1>
-<p style="color:#888">今天：<?= h($today) ?></p>
+<p style="color:var(--text-muted)">今天：<?= h($today) ?></p>
 
 <!-- 存储容量 -->
-<div class="storage-bar" style="margin-bottom:16px;padding:12px;background:#f8f9fa;border-radius:6px;font-size:13px">
+<div class="storage-bar">
     <strong>历史数据存储</strong>
-    <span style="margin-left:12px;color:#555">
+    <span class="storage-items">
     <?php foreach ($storage as $label => $s): ?>
-        <span style="margin-right:16px"><?= h($label) ?>: <?= formatSize($s['size']) ?> (<?= $s['files'] ?> 个)</span>
+        <span class="storage-item"><?= h($label) ?>: <?= formatSize($s['size']) ?> (<?= $s['files'] ?> 个)</span>
     <?php endforeach; ?>
     </span>
-    <div style="float:right;display:flex;gap:6px">
-        <button onclick="updateCode()" class="btn btn-sm" style="background:#e8f0fe;border-color:#1a73e8">在线更新</button>
-        <button onclick="cleanupData(4)" class="btn btn-sm">清理4天前</button>
-        <button onclick="cleanupData(0)" class="btn btn-sm" style="background:#fee2e2;border-color:#fecaca">全部清理</button>
+    <div class="storage-actions">
+        <button onclick="updateCode()" class="btn btn-sm">在线更新</button>
+        <button onclick="cleanupData(4)" class="btn btn-sm">清理 4 天前</button>
+        <button onclick="cleanupData(0)" class="btn btn-sm btn-danger">全部清理</button>
     </div>
 </div>
 
-<div class="filter-bar" style="margin-bottom:16px">
-    <a href="?filter=on" class="btn btn-sm <?= ($_GET['filter'] ?? 'all') === 'on' ? 'btn-primary' : '' ?>">已开启</a>
+<div class="filter-bar">
+    <a href="?filter=on" class="btn btn-sm <?= ($_GET['filter'] ?? 'all') === 'on' ? 'active' : '' ?>">已开启</a>
+    <a href="?filter=all" class="btn btn-sm <?= ($_GET['filter'] ?? 'all') === 'all' ? 'active' : '' ?>">全部</a>
 </div>
 
 <div class="hour-grid">
@@ -28,18 +29,20 @@ foreach ($hours as $h => $cfg):
     if (empty($cfg['enabled']) && $filter === 'on') continue;
 
     $status = $statuses[$h] ?? 'waiting';
-    $statusIcon = ['done' => '✅', 'fail' => '❌', 'waiting' => '⏳'][$status];
+    $statusIcon = ['done' => '✓', 'fail' => '✗', 'waiting' => '…'][$status];
     $statusText = ['done' => '已完成', 'fail' => '失败', 'waiting' => '等待中'][$status];
 
     if (empty($cfg['enabled'])) {
-        $statusIcon = '⚫';
+        $statusIcon = '○';
         $statusText = '已关闭';
     }
 ?>
     <div class="hour-card <?= empty($cfg['enabled']) ? 'disabled' : $status ?>">
         <div class="card-header">
-            <strong><?= $h ?>点</strong>
-            <span class="card-status"><?= $statusIcon ?> <?= $statusText ?></span>
+            <span class="card-hour"><?= $h ?>:00</span>
+            <span class="card-status card-status-<?= empty($cfg['enabled']) ? 'off' : $status ?>">
+                <?= $statusIcon ?> <?= $statusText ?>
+            </span>
         </div>
         <?php if (!empty($cfg['template'])): ?>
             <div class="card-tmpl"><?= h($cfg['template']) ?></div>
@@ -52,13 +55,17 @@ foreach ($hours as $h => $cfg):
 </div>
 
 <!-- 手动执行弹窗 -->
-<div id="runModal" style="display:none; position:fixed; top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);z-index:999">
-    <div style="background:#fff; width:500px; margin:80px auto; padding:24px; border-radius:8px">
-        <h3>手动执行 - <span id="runHourLabel"></span>点</h3>
-        <label>日期：<input type="date" id="runDate" value="<?= $today ?>"></label>
-        <button class="btn btn-primary" onclick="doRun()" style="margin-left:8px">开始执行</button>
-        <button class="btn" onclick="document.getElementById('runModal').style.display='none'">取消</button>
-        <pre id="runOutput" style="margin-top:12px;max-height:300px;overflow:auto;background:#f4f4f4;padding:8px;font-size:13px"></pre>
+<div id="runModal" class="modal-overlay" style="display:none">
+    <div class="modal-box">
+        <h3>手动执行 — <span id="runHourLabel"></span> 点</h3>
+        <label style="margin:12px 0">日期
+            <input type="date" id="runDate" value="<?= $today ?>">
+        </label>
+        <div style="display:flex;gap:8px;margin-top:12px">
+            <button class="btn btn-primary" onclick="doRun()">开始执行</button>
+            <button class="btn" onclick="document.getElementById('runModal').style.display='none'">取消</button>
+        </div>
+        <pre id="runOutput" class="run-output"></pre>
     </div>
 </div>
 
@@ -67,7 +74,7 @@ let runHourVal = 0;
 function runHour(h) {
     runHourVal = h;
     document.getElementById('runHourLabel').innerText = h;
-    document.getElementById('runModal').style.display = 'block';
+    document.getElementById('runModal').style.display = 'flex';
     document.getElementById('runOutput').innerText = '';
     document.getElementById('runDate').value = '<?= $today ?>';
 }
@@ -113,7 +120,7 @@ async function updateCode() {
     if (!confirm('确定从 GitHub 拉取最新代码？容器将短暂重启。')) return;
     const btn = event.target;
     btn.disabled = true;
-    btn.textContent = '更新中...';
+    btn.textContent = '更新中…';
     try {
         const r = await fetch('/update', { method: 'POST' });
         const result = await r.json();
@@ -128,15 +135,56 @@ async function updateCode() {
 </script>
 
 <style>
+/* Storage bar */
+.storage-bar {
+    display: flex; align-items: center; flex-wrap: wrap; gap: 12px;
+    margin-bottom: 16px; padding: 14px 16px;
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius);
+    font-size: 13px; font-weight: 300;
+}
+.storage-items { display: flex; flex-wrap: wrap; gap: 4px 16px; }
+.storage-item { color: var(--text-secondary); }
+.storage-actions { display: flex; gap: 6px; margin-left: auto; }
+
+/* Filter bar */
+.filter-bar { display: flex; gap: 4px; margin-bottom: 16px; }
+.filter-bar .btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+/* Hour grid */
 .hour-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; }
-.hour-card { border: 1px solid #ddd; border-radius: 6px; padding: 12px; }
+.hour-card {
+    border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 14px; background: var(--bg-card); transition: var(--transition);
+}
+.hour-card:hover { border-color: var(--wood); }
 .hour-card.disabled { opacity: 0.4; }
-.hour-card.done { border-left: 4px solid #4caf50; }
-.hour-card.fail { border-left: 4px solid #f44336; }
-.hour-card.waiting { border-left: 4px solid #ff9800; }
+.hour-card.done { border-left: 3px solid var(--accent); }
+.hour-card.fail { border-left: 3px solid #c0504d; }
+.hour-card.waiting { border-left: 3px solid var(--wood); }
 .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
-.card-status { font-size: 13px; }
-.card-tmpl { font-size: 12px; color: #888; margin-bottom: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.card-hour { font-size: 14px; font-weight: 400; }
+.card-status { font-size: 12px; font-weight: 300; }
+.card-status-done { color: var(--accent); }
+.card-status-fail { color: #c0504d; }
+.card-status-waiting { color: var(--wood); }
+.card-status-off { color: var(--text-muted); }
+.card-tmpl { font-size: 11px; color: var(--text-muted); margin-bottom: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-family: 'SF Mono', monospace; }
 .btn-run { width: 100%; margin-top: 4px; }
-.log-box { font-size: 13px; max-height: 400px; overflow: auto; background: #f8f8f8; padding: 10px; border-radius: 4px; white-space: pre-wrap; }
+
+/* Modal */
+.modal-overlay {
+    position: fixed; inset: 0; background: rgba(61,61,61,.3);
+    display: flex; align-items: center; justify-content: center; z-index: 999;
+}
+.modal-box {
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 24px; width: 500px; max-width: 90vw;
+}
+.modal-box h3 { font-size: 15px; font-weight: 400; margin-bottom: 12px; }
+.run-output {
+    margin-top: 12px; max-height: 300px; overflow: auto;
+    background: #3d3d3d; color: #d4cdc5; padding: 12px;
+    border-radius: var(--radius); font-size: 12px; font-family: 'SF Mono', monospace;
+    font-weight: 300; line-height: 1.7; white-space: pre-wrap;
+}
 </style>

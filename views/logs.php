@@ -9,6 +9,7 @@
             <?php endforeach; ?>
         </select>
         <button onclick="refreshLog()" class="btn btn-sm">刷新</button>
+        <span class="log-auto">自动刷新 3s</span>
     </div>
     <pre id="logContent" class="log-box"><?= h($logText ?: '(暂无日志)') ?></pre>
 </div>
@@ -26,15 +27,31 @@ function loadLog(date) {
             const lines = t.split('\n').filter(l => l).reverse();
             let html = '';
             for (const l of lines) {
-                if (l.includes('[ERROR]') || l.includes('失败') || l.includes('错误')) html += '<span style="color:#b91c1c">' + l + '</span>\n';
-                else if (l.includes('[WARN]')) html += '<span style="color:#166534">' + l + '</span>\n';
-                else html += l + '\n';
+                if (l.includes('[ERROR]') || l.includes('失败') || l.includes('错误'))
+                    html += '<span class="log-err">' + l + '</span>\n';
+                else if (l.includes('[WARN]'))
+                    html += '<span class="log-warn">' + l + '</span>\n';
+                else
+                    html += l + '\n';
             }
             el.innerHTML = html;
         });
 }
 function refreshLog() { loadLog(document.getElementById('dateSelect').value); }
 document.addEventListener('DOMContentLoaded', refreshLog);
-// Auto-refresh every 3s
 let timer = setInterval(refreshLog, 3000);
 </script>
+
+<style>
+.log-toolbar {
+    display: flex; gap: 8px; align-items: center; margin-bottom: 12px;
+}
+.log-toolbar select {
+    padding: 6px 10px; border-radius: var(--radius);
+    border: 1px solid var(--border); font-weight: 300; font-size: 13px;
+    background: var(--bg-card); color: var(--text);
+}
+.log-auto { font-size: 11px; color: var(--text-muted); margin-left: auto; }
+.log-err { color: #c0504d; }
+.log-warn { color: var(--wood); }
+</style>

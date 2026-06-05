@@ -1,17 +1,60 @@
 <?php $view = 'login'; ?>
 <!DOCTYPE html>
 <html lang="zh-CN">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>登录 - 时报推送</title>
-<style>
-*{margin:0;padding:0;box-sizing:border-box}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f0f2f5;display:flex;align-items:center;justify-content:center;min-height:100vh}
-.login-box{background:#fff;padding:40px 32px;border-radius:8px;box-shadow:0 2px 12px rgba(0,0,0,.1);width:360px}
-.login-box h1{text-align:center;margin-bottom:24px;font-size:20px;color:#1a1a2e}
-.login-box input{width:100%;padding:10px 12px;border:1px solid #d1d5db;border-radius:6px;font-size:14px;margin-bottom:16px}
-.login-box button{width:100%;padding:10px;background:#4f46e5;color:#fff;border:none;border-radius:6px;font-size:14px;cursor:pointer}
-.login-box button:hover{background:#4338ca}
-.error{color:#ef4444;font-size:13px;margin-bottom:12px;text-align:center}
-</style>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>登录 — 时报推送</title>
+    <style>
+    :root {
+        --bg: #f5f0eb;
+        --bg-card: #ffffff;
+        --text: #3d3d3d;
+        --text-muted: #b8a99a;
+        --accent: #5a7a6b;
+        --accent-hover: #4d6b5d;
+        --border: #e0d8cf;
+        --radius: 6px;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+        font-family: -apple-system, 'Helvetica Neue', 'PingFang SC', sans-serif;
+        font-weight: 300;
+        background: var(--bg);
+        display: flex; align-items: center; justify-content: center;
+        min-height: 100vh;
+    }
+    .login-box {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 40px 32px;
+        width: 360px;
+    }
+    .login-box h1 {
+        text-align: center; margin-bottom: 24px;
+        font-size: 18px; font-weight: 300; letter-spacing: 0.06em;
+        color: var(--text);
+    }
+    .login-box input {
+        width: 100%; padding: 10px 12px;
+        border: 1px solid var(--border); border-radius: var(--radius);
+        font-size: 13px; font-weight: 300; color: var(--text);
+        margin-bottom: 16px; outline: none;
+        transition: border-color 0.5s ease-in-out;
+    }
+    .login-box input:focus { border-color: var(--accent); }
+    .login-box input::placeholder { color: var(--text-muted); }
+    .login-box button {
+        width: 100%; padding: 10px;
+        background: var(--accent); color: #fff;
+        border: none; border-radius: var(--radius);
+        font-size: 13px; font-weight: 300; cursor: pointer;
+        transition: background 0.5s ease-in-out;
+    }
+    .login-box button:hover { background: var(--accent-hover); }
+    .error { color: #c0504d; font-size: 12px; margin-bottom: 12px; text-align: center; font-weight: 300; }
+    </style>
 </head>
 <body>
 <div class="login-box">

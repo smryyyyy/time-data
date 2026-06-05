@@ -1,11 +1,14 @@
 <?php
 
 /**
- * 从 xlsx 直接读取导出 sheet 的 A50:A60 文字（ZipArchive + XML解析，省内存）
+ * 从 xlsx 直接读取导出 sheet 的文案文字（ZipArchive + XML解析，省内存）
+ * @param string $xlsxFile xlsx 文件路径
+ * @param array $hourCfg 时间点配置，用于获取每个 sheet 的 text_row_start/text_row_end
  */
-function readExportSheetText(string $xlsxFile): array
+function readExportSheetText(string $xlsxFile, array $hourCfg = []): array
 {
     $texts = [];
+    $exports = $hourCfg['exports'] ?? [];
     $zip = new ZipArchive();
     if ($zip->open($xlsxFile) !== true) return $texts;
 
@@ -50,49 +53,50 @@ function readExportSheetText(string $xlsxFile): array
         $sheetXml = $zip->getFromName('xl/' . $target);
         if (!$sheetXml) continue;
 
-        // 找 sheet 的列定义（可能影响 cell 引用）
-        // 直接用正则匹配 A50-A60
-        $lines = [];
-        for ($row = 50; $row <= 60; $row++) {
-            $col = 'A';
-            $cellRef = $col . $row;
-            // 匹配单元格: <c r="A50" ...>  (可能有 s="N" t="str" 等属性)
-            $pattern = '/<c[^>]*r="' . $cellRef . '"[^>]*>(.*?)<\/c>/s';
-            if (preg_match($pattern, $sheetXml, $cm)) {
-                $cellContent = $cm[1];
-                // 检查是否公式 + 缓存值
-                if (preg_match('/<v>(.*?)<\/v>/s', $cellContent, $vm)) {
-                    $v = $vm[1];
-                // 检查cell类型：先判公式
-                if (preg_match('/<f[^>]*>/', $cellContent)) {
-                    // formula - use cached value <v>
-                    if (preg_match('/<v>(.*?)<\/v>/s', $cellContent, $vm)) {
-                        $cachedVal = $vm[1];
-                        // cached value of string formula is plain text in <v>
-                        $val = $cachedVal;
-                    } else {
-                        continue; // no cached value
-                    }
-                } elseif (preg_match('/<c[^>]*t="s"/', $cm[0])) {
-                    // shared string index
-                    $idx = (int)$v;
-                    $val = $sharedStrings[$idx] ?? '';
-                } elseif (preg_match('/<c[^>]*t="inlineStr"/', $cm[0])) {
-                    // inline string
-                    if (preg_match('/<t[^>]*>(.*?)<\/t>/s', $cellContent, $tm)) {
-                        $val = $tm[1];
-                    } else {
-                        $val = '';
-                    }
-                } else {
-                    // plain value
-                    $val = $v;
-                }
+        // 使用配置的行数范围，默认 50-60
+        $sheetCfg = $exports[$sheetName] ?? [];
+        $rowStart = is_array($sheetCfg) ? ($sheetCfg['text_row_start'] ?? 50) : 50;
+        $rowEnd   = is_array($sheetCfg) ? ($sheetCfg['text_row_end'] ?? 60) : 60;
 
-                    if ($val !== '' && $val !== null) {
-                        $lines[] = $val;
-                    }
+        $lines = [];
+        for ($row = $rowStart; $row <= $rowEnd; $row++) {
+            $cellRef = 'A' . $row;
+            $pattern = '/<c[^>]*r="' . $cellRef . '"[^>]*>(.*?)<\/c>/s';
+            if (!preg_match($pattern, $sheetXml, $cm)) continue;
+
+            $cellContent = $cm[1];
+
+            // 先取 <v> 缓存值
+            $v = null;
+            if (preg_match('/<v>(.*?)<\/v>/s', $cellContent, $vm)) {
+                $v = $vm[1];
+            }
+
+            // 判断 cell 类型
+            if (preg_match('/<f[^>]*>/', $cellContent)) {
+                // 公式 → 用缓存值
+                if ($v !== null) {
+                    $val = $v;
+                } else {
+                    continue;
                 }
+            } elseif (preg_match('/<c[^>]*t="s"/', $cm[0])) {
+                // 共享字符串
+                $val = $sharedStrings[(int)$v] ?? '';
+            } elseif (preg_match('/<c[^>]*t="inlineStr"/', $cm[0])) {
+                // 内联字符串
+                if (preg_match('/<t[^>]*>(.*?)<\/t>/s', $cellContent, $tm)) {
+                    $val = $tm[1];
+                } else {
+                    $val = '';
+                }
+            } else {
+                // 普通值
+                $val = $v;
+            }
+
+            if ($val !== '' && $val !== null) {
+                $lines[] = $val;
             }
         }
         $texts[$sheetName] = implode("\n", $lines);

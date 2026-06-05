@@ -107,6 +107,13 @@ class SettingsController
                                     $v['cell_ranges'] = array_map('trim', explode(',', $v['cell_ranges']));
                                 }
                             }
+                            // Handle text_row_start / text_row_end
+                            if (isset($v['text_row_start']) && isset($v['text_row_end'])) {
+                                $v['text_row_start'] = (int)$v['text_row_start'];
+                                $v['text_row_end'] = (int)$v['text_row_end'];
+                            } else {
+                                unset($v['text_row_start'], $v['text_row_end']);
+                            }
                             $parsed[$k] = $v;
                         } else {
                             $parsed[$k] = $v;

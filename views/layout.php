@@ -9,12 +9,12 @@
 <body>
     <nav class="topbar">
         <div class="topbar-inner">
-            <a href="/" class="logo">时报推送系统</a>
+            <a href="/" class="logo">时报推送</a>
             <div class="nav-links">
                 <a href="/" class="<?= $view === 'dashboard' ? 'active' : '' ?>">仪表盘</a>
                 <a href="/logs" class="<?= $view === 'logs' ? 'active' : '' ?>">日志</a>
                 <a href="/settings" class="<?= $view === 'settings' ? 'active' : '' ?>">设置</a>
-                <a href="/logout" style="color:#ef4444">退出</a>
+                <a href="/logout" style="color:#c0504d">退出</a>
             </div>
         </div>
     </nav>
