@@ -61,6 +61,7 @@ class Push
                     } catch (\Throwable $e) {
                         $this->logger->error("  图片失败 {$imgName}: " . $e->getMessage());
                     }
+                    usleep(300000);
                 }
             }
 
