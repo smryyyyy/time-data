@@ -3,27 +3,32 @@
 
 <form method="POST" action="/settings" id="settingsForm" class="settings-form">
 
-<div class="card" id="globalSettings">
-    <div class="card-header">
-        <h2>全局设置</h2>
-        <button type="submit" class="btn btn-primary btn-sm">保存全部设置</button>
+<div class="card global-settings" id="globalSettings">
+    <div class="global-header" onclick="toggleGlobal()">
+        <div class="global-header-left">
+            <span class="hour-arrow global-arrow">›</span>
+            <h2>全局设置</h2>
+        </div>
+        <button type="submit" class="btn btn-primary btn-sm" onclick="event.stopPropagation()">保存全部设置</button>
     </div>
-    <div class="form-grid">
-        <label>pzoom 用户名
-            <input type="text" name="pzoom_username" value="<?= h($pzoom['username'] ?? '') ?>">
-        </label>
-        <label>pzoom 密码
-            <input type="password" name="pzoom_password" value="<?= h($pzoom['password'] ?? '') ?>">
-        </label>
-        <label>告警 Webhook
-            <input type="text" name="alert_webhook" value="<?= h($alert) ?>" placeholder="失败时推送到此飞书机器人">
-        </label>
-        <label>飞书 App ID
-            <input type="text" name="feishu_app_id" value="<?= h($feishu['app_id'] ?? '') ?>" placeholder="cli_xxxxxxxxxxxxxxxxxx">
-        </label>
-        <label>飞书 App Secret
-            <input type="password" name="feishu_app_secret" value="<?= h($feishu['app_secret'] ?? '') ?>" placeholder="应用密钥">
-        </label>
+    <div class="global-body">
+        <div class="form-grid">
+            <label>pzoom 用户名
+                <input type="text" name="pzoom_username" value="<?= h($pzoom['username'] ?? '') ?>">
+            </label>
+            <label>pzoom 密码
+                <input type="password" name="pzoom_password" value="<?= h($pzoom['password'] ?? '') ?>">
+            </label>
+            <label>告警 Webhook
+                <input type="text" name="alert_webhook" value="<?= h($alert) ?>" placeholder="失败时推送到此飞书机器人">
+            </label>
+            <label>飞书 App ID
+                <input type="text" name="feishu_app_id" value="<?= h($feishu['app_id'] ?? '') ?>" placeholder="cli_xxxxxxxxxxxxxxxxxx">
+            </label>
+            <label>飞书 App Secret
+                <input type="password" name="feishu_app_secret" value="<?= h($feishu['app_secret'] ?? '') ?>" placeholder="应用密钥">
+            </label>
+        </div>
     </div>
 </div>
 
@@ -160,6 +165,10 @@
 <script>
 function toggleHour(h) {
     document.getElementById('hour' + h).classList.toggle('collapsed');
+}
+
+function toggleGlobal() {
+    document.getElementById('globalSettings').classList.toggle('collapsed');
 }
 
 document.getElementById('settingsForm').addEventListener('submit', function(e) {
@@ -471,4 +480,24 @@ function addRange(btn) {
 
 /* Page-level scroll override */
 body { overflow: hidden; }
+
+/* Global settings collapsible */
+.global-settings { flex-shrink: 0; }
+.global-settings.collapsed .global-body { display: none; }
+.global-settings.collapsed .global-arrow { transform: rotate(0deg); }
+.global-header {
+    display: flex; justify-content: space-between; align-items: center;
+    cursor: pointer; user-select: none;
+    transition: var(--transition);
+}
+.global-header-left {
+    display: flex; align-items: center; gap: 10px;
+}
+.global-header-left h2 { margin: 0; }
+.global-arrow {
+    color: var(--text-muted); font-size: 16px; font-weight: 200;
+    transition: transform 0.3s ease-in-out;
+    transform: rotate(90deg);
+}
+.global-body { margin-top: 16px; }
 </style>
