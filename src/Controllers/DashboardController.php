@@ -157,6 +157,7 @@ class DashboardController
         echo "✅ 步骤 1/4 下载完成\n"; flush();
 
         // 2. 合并（ZipArchive直写+LO重算）
+        @unlink($mergedFile);
         copy($tmplFile, $mergedFile);
         echo "⏳ 步骤 2/4 合并数据...\n"; flush();
         try { (new \App\Steps\Merge($config, $log))->execute($date, $hour, $mergedFile); echo "✅ 步骤 2/4 合并完成\n"; }
