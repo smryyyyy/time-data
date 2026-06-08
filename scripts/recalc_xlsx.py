@@ -111,7 +111,7 @@ try:
     doc.storeToURL(f"file://{safe_output}", props)
     doc.close(True)
 
-    os.replace(safe_output, output_path)
+    shutil.move(safe_output, output_path)
     print("OK")
 
 except Exception as e:
