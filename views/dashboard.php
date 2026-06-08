@@ -18,8 +18,8 @@
 </div>
 
 <div class="filter-bar">
-    <a href="?filter=on" class="btn btn-sm <?= ($_GET['filter'] ?? 'all') === 'on' ? 'active' : '' ?>">已开启</a>
-    <a href="?filter=all" class="btn btn-sm <?= ($_GET['filter'] ?? 'all') === 'all' ? 'active' : '' ?>">全部</a>
+    <a href="?filter=on" class="btn btn-sm <?= ($_GET['filter'] ?? 'on') === 'on' ? 'active' : '' ?>">已开启</a>
+    <a href="?filter=all" class="btn btn-sm <?= ($_GET['filter'] ?? 'on') === 'all' ? 'active' : '' ?>">全部</a>
 </div>
 
 <div class="hour-grid">

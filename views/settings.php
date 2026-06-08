@@ -3,7 +3,7 @@
 
 <form method="POST" action="/settings" id="settingsForm" class="settings-form">
 
-<div class="card global-settings" id="globalSettings">
+<div class="card global-settings collapsed" id="globalSettings">
     <div class="global-header" onclick="toggleGlobal()">
         <div class="global-header-left">
             <span class="hour-arrow global-arrow">›</span>
@@ -36,21 +36,21 @@
     <div class="card-header">
         <h2>时间点配置 <small>（开启 = 定时整点自动执行）</small></h2>
         <div class="filter-group">
-            <a href="?filter=on" class="btn btn-sm <?= ($_GET['filter'] ?? 'all') === 'on' ? 'active' : '' ?>">已开启</a>
-            <a href="?filter=all" class="btn btn-sm <?= ($_GET['filter'] ?? 'all') === 'all' ? 'active' : '' ?>">全部</a>
-            <a href="?filter=off" class="btn btn-sm <?= ($_GET['filter'] ?? '') === 'off' ? 'active' : '' ?>">未开启</a>
+            <a href="?filter=on" class="btn btn-sm <?= ($_GET['filter'] ?? 'on') === 'on' ? 'active' : '' ?>">已开启</a>
+            <a href="?filter=all" class="btn btn-sm <?= ($_GET['filter'] ?? 'on') === 'all' ? 'active' : '' ?>">全部</a>
+            <a href="?filter=off" class="btn btn-sm <?= ($_GET['filter'] ?? 'on') === 'off' ? 'active' : '' ?>">未开启</a>
         </div>
     </div>
     <div class="hours-scroll">
 
     <?php
-    $filter = $_GET['filter'] ?? 'all';
+    $filter = $_GET['filter'] ?? 'on';
     for ($h = 0; $h < 24; $h++):
         $cfg = $hours[$h] ?? ['enabled' => false, 'data_prefix' => '', 'copy_range' => ['A', 'K'], 'template' => '', 'exports' => []];
         if ($filter === 'on' && empty($cfg['enabled'])) continue;
         if ($filter === 'off' && !empty($cfg['enabled'])) continue;
         $sheets = $hourSheets[$h] ?? [];
-        $collapsed = empty($cfg['enabled']) ? ' collapsed' : '';
+        $collapsed = ' collapsed';
     ?>
     <div class="hour-section<?= $collapsed ?>" id="hour<?= $h ?>">
         <div class="hour-header" onclick="toggleHour(<?= $h ?>)">
