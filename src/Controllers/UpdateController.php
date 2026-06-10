@@ -46,7 +46,7 @@ class UpdateController
         }
 
         // 2. 解压到 /var/www/html，覆盖旧文件
-        $cmd = sprintf('tar -xzf %s --strip-components=1 -C /var/www/html 2>&1', escapeshellarg($tmpFile));
+        $cmd = sprintf('tar -xzf %s --strip-components=1 --overwrite -C /var/www/html 2>&1', escapeshellarg($tmpFile));
         exec($cmd, $output, $exitCode);
         unlink($tmpFile);
 
