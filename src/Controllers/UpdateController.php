@@ -3,6 +3,7 @@ namespace App\Controllers;
 
 /**
  * 在线更新 — 从 GitHub 拉取最新代码覆盖容器内文件
+ * 支持通过 update_proxy 配置走代理下载（解决国内 GitHub 直连 SSL 中断问题）
  */
 class UpdateController
 {
@@ -12,18 +13,26 @@ class UpdateController
         $logger = $GLOBALS['hermes_logger'];
         $logger->info("开始在线更新...");
 
+        // 读取代理配置（settings.json 或 config.php 中的 update_proxy）
+        $proxyUrl = $config['update_proxy'] ?? '';
+
         // 1. 下载最新源码压缩包
         $tmpFile = sys_get_temp_dir() . '/time-data-update.tar.gz';
         $url = 'https://github.com/smryyyyy/time-data/archive/refs/heads/main.tar.gz';
         
         $ch = curl_init($url);
         $fp = fopen($tmpFile, 'w');
-        curl_setopt_array($ch, [
+        $curlOpts = [
             CURLOPT_FILE => $fp,
             CURLOPT_TIMEOUT => 120,
             CURLOPT_FOLLOWLOCATION => true,
             CURLOPT_SSL_VERIFYPEER => false,
-        ]);
+        ];
+        if ($proxyUrl) {
+            $curlOpts[CURLOPT_PROXY] = $proxyUrl;
+            $logger->info("使用代理: {$proxyUrl}");
+        }
+        curl_setopt_array($ch, $curlOpts);
         curl_exec($ch);
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         $err = curl_error($ch);

@@ -7,3 +7,6 @@ tmp
 templates/*.xlsx
 templates/backup
 uploads
+src/.DS_Store
+.DS_Store
+scripts/__pycache__/download_pzoom.cpython-313.pyc
