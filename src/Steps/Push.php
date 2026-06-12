@@ -49,6 +49,10 @@ class Push
         foreach ($exports as $sheetName => $cfg) {
             $webhook = is_string($cfg) ? $cfg : ($cfg['webhook'] ?? '');
             if (empty($webhook)) continue;
+            // 分组间停 1 秒，避免飞书全局限流丢消息
+            if (array_key_first($exports) !== $sheetName) {
+                usleep(1000000);
+            }
             $this->logger->info("推送: {$sheetName}");
 
             $ranges = is_array($cfg) ? ($cfg['cell_ranges'] ?? []) : [];
