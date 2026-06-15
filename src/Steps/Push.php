@@ -81,25 +81,35 @@ class Push
         }
     }
 
-    private function curlSendMessage(string $webhook, string $jsonPayload): array
+    private function curlSendMessage(string $webhook, string $jsonPayload, int $maxRetries = 3): array
     {
-        $ch = curl_init($webhook);
-        curl_setopt_array($ch, [
-            CURLOPT_POST => 1,
-            CURLOPT_RETURNTRANSFER => 1,
-            CURLOPT_TIMEOUT => 30,
-            CURLOPT_SSL_VERIFYPEER => 0,
-            CURLOPT_HTTPHEADER => ['Content-Type: application/json'],
-            CURLOPT_POSTFIELDS => $jsonPayload,
-        ]);
-        $rb = curl_exec($ch);
-        $hc = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
-        if ($hc !== 200) {
-            throw new \RuntimeException("推送失败: HTTP={$hc} {$rb}");
+        $attempt = 0;
+        while (true) {
+            $attempt++;
+            $ch = curl_init($webhook);
+            curl_setopt_array($ch, [
+                CURLOPT_POST => 1,
+                CURLOPT_RETURNTRANSFER => 1,
+                CURLOPT_TIMEOUT => 30,
+                CURLOPT_SSL_VERIFYPEER => 0,
+                CURLOPT_HTTPHEADER => ['Content-Type: application/json'],
+                CURLOPT_POSTFIELDS => $jsonPayload,
+            ]);
+            $rb = curl_exec($ch);
+            $hc = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            curl_close($ch);
+            $re = json_decode($rb, true);
+            file_put_contents('/tmp/push_debug.log', date('H:i:s')." URL=".$webhook."\nPAYLOAD=".$jsonPayload."\nHTTP={$hc} RESP={$rb}\n\n", FILE_APPEND);
+            if ($hc === 200 && empty($re['code'])) {
+                return $re;
+            }
+            $errMsg = ($re['msg'] ?? $rb);
+            if ($attempt >= $maxRetries) {
+                throw new \RuntimeException("推送失败({$attempt}次): {$errMsg}");
+            }
+            file_put_contents('/tmp/push_debug.log', date('H:i:s')."  RETRY {$attempt}/{$maxRetries}: {$errMsg}\n", FILE_APPEND);
+            sleep(2);
         }
-        file_put_contents('/tmp/push_debug.log', date('H:i:s')." URL=".$webhook."\nPAYLOAD=".$jsonPayload."\nHTTP={$hc} RESP={$rb}\n\n", FILE_APPEND);
-        return json_decode($rb, true) ?: [];
     }
 
     private function getToken(array $feishuCfg): string
