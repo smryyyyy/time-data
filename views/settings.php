@@ -93,10 +93,10 @@
                 <?php else: ?>
                     <span class="template-empty">未上传</span>
                 <?php endif; ?>
-                <form class="tpl-upload" data-hour="<?= $h ?>">
+                <div class="tpl-upload" data-hour="<?= $h ?>">
                     <input type="file" name="template" accept=".xlsx">
-                    <button type="submit" class="btn btn-sm">上传</button>
-                </form>
+                    <button type="button" class="btn btn-sm btn-tpl-up" data-hour="<?= $h ?>">上传</button>
+                </div>
                 <span class="tpl-msg" id="tplMsg<?= $h ?>"></span>
             </div>
 
@@ -250,14 +250,14 @@ function showToast(msg, ok) {
     setTimeout(() => { t.classList.remove('show'); setTimeout(() => t.remove(), 500); }, 2000);
 }
 
-document.querySelectorAll('.tpl-upload').forEach(f => {
-    f.addEventListener('submit', async function(e) {
-        e.preventDefault();
+document.querySelectorAll('.btn-tpl-up').forEach(btn => {
+    btn.addEventListener('click', async function() {
         const h = this.dataset.hour;
+        const container = this.closest('.tpl-upload');
+        const fi = container.querySelector('input[type=file]');
+        if (!fi.files[0]) { document.getElementById('tplMsg' + h).textContent = '请选择文件'; return; }
         const fd = new FormData();
         fd.set('hour', h);
-        const fi = this.querySelector('input[type=file]');
-        if (!fi.files[0]) { document.getElementById('tplMsg' + h).textContent = '请选择文件'; return; }
         fd.set('template', fi.files[0]);
         const msg = document.getElementById('tplMsg' + h);
         msg.textContent = '上传中…';
@@ -331,7 +331,7 @@ function addRange(btn) {
     border-radius: 4px; color: var(--text); font-family: 'SF Mono', monospace;
 }
 .template-empty { font-size: 12px; color: var(--text-muted); }
-.tpl-upload { display: flex; align-items: center; gap: 6px; }
+.tpl-upload { display: flex; align-items: center; gap: 6px; margin: 0; padding: 0; border: none; background: none; }
 .tpl-upload input[type="file"] { font-size: 12px; max-width: 160px; }
 .tpl-msg { font-size: 12px; }
 .msg-ok { color: var(--accent); }

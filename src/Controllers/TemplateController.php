@@ -70,7 +70,9 @@ class TemplateController
         $ext = pathinfo($file['name'], PATHINFO_EXTENSION);
         $newName = $hour . '.' . $ext;
         $dest = $tplDir . '/' . $newName;
-        move_uploaded_file($file['tmp_name'], $dest);
+        if (!move_uploaded_file($file['tmp_name'], $dest)) {
+            jsonError('文件保存失败: 无法写入模板目录', 500);
+        }
 
         // 更新配置（直接写 settings.json，绕过 SettingsStore）
         $setFile = $config['data_dir'] . '/settings.json';

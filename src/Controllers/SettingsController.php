@@ -126,6 +126,23 @@ class SettingsController
 
         if (!empty($updates)) {
             $store->merge($updates);
+
+            // 同步 schedule.json（从 hours 配置生成）
+            $scheduleFile = $config['data_dir'] . '/schedule.json';
+            $newSchedule = [];
+            $merged = $store->load();
+            $hours = $merged['hours'] ?? [];
+            foreach ($hours as $h => $cfg) {
+                if (!empty($cfg['enabled']) && !empty($cfg['data_prefix'])) {
+                    $newSchedule[] = [
+                        'time' => sprintf('%02d:00', (int)$h),
+                        'hour' => (int)$h,
+                        'last_run' => '',
+                    ];
+                }
+            }
+            file_put_contents($scheduleFile, json_encode($newSchedule, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+
             $logger->info('配置已更新');
         }
 
