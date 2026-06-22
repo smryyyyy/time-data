@@ -34,6 +34,7 @@ class App
         // 需要登录
         $r->get('/',                      'Controllers\DashboardController',  'index',  true);
         $r->post('/run',                  'Controllers\DashboardController',  'run',    true);
+$r->post('/upload-source', 'Controllers\DashboardController', 'uploadSource', true);
         $r->post('/cleanup',              'Controllers\DashboardController',  'cleanup', true);
         $r->any('/update',                'Controllers\UpdateController',     'index',  true);
         $r->get('/logs',                  'Controllers\LogController',        'index',  true);

@@ -256,4 +256,62 @@ class DashboardController
             'total_freed' => $totalSize,
         ], JSON_UNESCAPED_UNICODE);
     }
+
+    /**
+     * 手动上传源数据文件（替换今日/昨日的 xlsx）
+     */
+    public function uploadSource(): void
+    {
+        header("Content-Type: application/json; charset=utf-8");
+        $config = $GLOBALS["hermes_config"];
+        $logger = $GLOBALS["hermes_logger"];
+
+        $hour  = (int)($_POST["hour"] ?? 0);
+        $date  = $_POST["date"] ?? "";
+        $which = $_POST["which"] ?? "today";
+
+        if (!isset($config["hours"][$hour])) {
+            echo json_encode(["success" => false, "error" => "无效的时间点"], JSON_UNESCAPED_UNICODE);
+            return;
+        }
+        if (!preg_match("/^\d{4}-\d{2}-\d{2}$/", $date)) {
+            echo json_encode(["success" => false, "error" => "日期格式错误"], JSON_UNESCAPED_UNICODE);
+            return;
+        }
+
+        $prefix  = $config["hours"][$hour]["data_prefix"] ?? "";
+        if (empty($prefix)) {
+            echo json_encode(["success" => false, "error" => "该时间点未配置数据前缀"], JSON_UNESCAPED_UNICODE);
+            return;
+        }
+
+        if ($which === "yesterday") {
+            $date = date("Y-m-d", strtotime($date . " -1 day"));
+        }
+
+        $targetPath = sourceFilePath($config["data_dir"], $date, $prefix);
+        $dir = dirname($targetPath);
+        if (!is_dir($dir)) {
+            mkdir($dir, 0755, true);
+        }
+
+        if (empty($_FILES["file"]) || $_FILES["file"]["error"] !== UPLOAD_ERR_OK) {
+            $errCode = $_FILES["file"]["error"] ?? -1;
+            echo json_encode(["success" => false, "error" => "上传失败 (code={$errCode})"], JSON_UNESCAPED_UNICODE);
+            return;
+        }
+
+        $tmpPath = $_FILES["file"]["tmp_name"];
+        $origName = $_FILES["file"]["name"];
+
+        if (!move_uploaded_file($tmpPath, $targetPath)) {
+            echo json_encode(["success" => false, "error" => "保存文件失败"], JSON_UNESCAPED_UNICODE);
+            return;
+        }
+        @chmod($targetPath, 0644);
+
+        $logger->info("手动上传源数据: {$origName} -> {$targetPath}");
+
+        echo json_encode(["success" => true, "message" => "已保存: {$targetPath}"], JSON_UNESCAPED_UNICODE);
+    }
 }

@@ -11,7 +11,6 @@
     <?php endforeach; ?>
     </span>
     <div class="storage-actions">
-        <button onclick="updateCode()" class="btn btn-sm">在线更新</button>
         <button onclick="cleanupData(4)" class="btn btn-sm">清理 4 天前</button>
         <button onclick="cleanupData(0)" class="btn btn-sm btn-danger">全部清理</button>
     </div>
@@ -48,7 +47,11 @@ foreach ($hours as $h => $cfg):
             <div class="card-tmpl"><?= h($cfg['template']) ?></div>
         <?php endif; ?>
         <?php if (!empty($cfg['enabled'])): ?>
-            <button class="btn btn-sm btn-run" onclick="runHour(<?= $h ?>)">手动执行</button>
+            <div class="btn-row">
+                <button class="btn btn-sm btn-run" onclick="runHour(<?= $h ?>)">手动执行</button>
+                <button class="btn btn-sm btn-upload" onclick="uploadSource(<?= $h ?>, 'today')">&#x1F4E4; 今日</button>
+                <button class="btn btn-sm btn-upload" onclick="uploadSource(<?= $h ?>, 'yesterday')">&#x1F4E4; 昨日</button>
+            </div>
         <?php endif; ?>
     </div>
 <?php endforeach; ?>
@@ -116,21 +119,41 @@ async function cleanupData(days) {
     }
 }
 
-async function updateCode() {
-    if (!confirm('确定从 GitHub 拉取最新代码？容器将短暂重启。')) return;
-    const btn = event.target;
-    btn.disabled = true;
-    btn.textContent = '更新中…';
-    try {
-        const r = await fetch('/update', { method: 'POST' });
-        const result = await r.json();
-        alert(result.message);
-        if (result.success) location.reload();
-    } catch(e) {
-        alert('更新失败: ' + e);
-        btn.disabled = false;
-        btn.textContent = '在线更新';
-    }
+
+
+function showToast(msg, ok) {
+    const t = document.createElement("div");
+    t.textContent = msg;
+    t.style.cssText = "position:fixed;bottom:24px;right:24px;padding:12px 20px;border-radius:8px;color:#fff;font-size:14px;z-index:9999;" +
+        (ok ? "background:#16a34a;" : "background:#dc2626;");
+    document.body.appendChild(t);
+    setTimeout(() => { t.style.opacity = "0"; setTimeout(() => t.remove(), 300); }, 2000);
+}
+async function uploadSource(hour, which) {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.xlsx';
+    input.onchange = async () => {
+        const file = input.files[0];
+        if (!file) return;
+        const fd = new FormData();
+        fd.set('hour', hour);
+        fd.set('date', '<?= $today ?>');
+        fd.set('which', which);
+        fd.set('file', file);
+        try {
+            const r = await fetch('/upload-source', { method: 'POST', body: fd });
+            const result = await r.json();
+            if (result.success) {
+                showToast(result.message, true);
+            } else {
+                showToast(result.error || '上传失败', false);
+            }
+        } catch(e) {
+            showToast('上传失败: ' + e.message, false);
+        }
+    };
+    input.click();
 }
 </script>
 
@@ -186,5 +209,18 @@ async function updateCode() {
     background: #3d3d3d; color: #d4cdc5; padding: 12px;
     border-radius: var(--radius); font-size: 12px; font-family: 'SF Mono', monospace;
     font-weight: 300; line-height: 1.7; white-space: pre-wrap;
+}
+
+.btn-row { display: flex; gap: 6px; margin-top: 6px; }
+.btn-row .btn { flex: 1; font-size: 11px; padding: 6px 4px; border-radius: 4px; }
+.btn-upload {
+    background: transparent; border: 1px dashed var(--border); color: var(--text-muted);
+    cursor: pointer; transition: all 0.3s ease; font-weight: 300;
+}
+.btn-upload:hover {
+    background: var(--bg-card); border-color: var(--wood); color: var(--wood);
+}
+.btn-upload:active {
+    background: var(--wood); color: #fff;
 }
 </style>
