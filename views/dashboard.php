@@ -49,8 +49,8 @@ foreach ($hours as $h => $cfg):
         <?php if (!empty($cfg['enabled'])): ?>
             <div class="btn-row">
                 <button class="btn btn-sm btn-run" onclick="runHour(<?= $h ?>)">手动执行</button>
-                <button class="btn btn-sm btn-upload" onclick="uploadSource(<?= $h ?>, 'today')">&#x1F4E4; 今日</button>
-                <button class="btn btn-sm btn-upload" onclick="uploadSource(<?= $h ?>, 'yesterday')">&#x1F4E4; 昨日</button>
+                <button class="btn btn-sm btn-run" onclick="uploadSource(<?= $h ?>, 'today')">今日</button>
+                <button class="btn btn-sm btn-run" onclick="uploadSource(<?= $h ?>, 'yesterday')">昨日</button>
             </div>
         <?php endif; ?>
     </div>
@@ -212,15 +212,5 @@ async function uploadSource(hour, which) {
 }
 
 .btn-row { display: flex; gap: 6px; margin-top: 6px; }
-.btn-row .btn { flex: 1; font-size: 11px; padding: 6px 4px; border-radius: 4px; }
-.btn-upload {
-    background: transparent; border: 1px dashed var(--border); color: var(--text-muted);
-    cursor: pointer; transition: all 0.3s ease; font-weight: 300;
-}
-.btn-upload:hover {
-    background: var(--bg-card); border-color: var(--wood); color: var(--wood);
-}
-.btn-upload:active {
-    background: var(--wood); color: #fff;
-}
+.btn-row .btn { flex: 1; }
 </style>
